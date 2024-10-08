@@ -4,15 +4,11 @@ import cv2
 import numpy as np
 from dataclasses import dataclass
 import inpainting
-
-
 # %%
 @dataclass
 class Parameters:
     hi: float
     hj: float
-
-
 # %%
 # Folder with the images
 image_folder = 'images/'
@@ -190,7 +186,3 @@ u[:, :, 2] = inpainting.laplace_equation(im[:, :, 2], mask, param)
 # Show the final image
 cv2.imshow('In-painted image', u)
 cv2.waitKey(0)
-#%%
-#%%
-image_folder = 'week1/images/'
-image_name = 'image4'
