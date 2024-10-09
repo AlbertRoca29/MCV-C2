@@ -221,7 +221,7 @@ V_thresh = (V/255 > hsv_thresholds[2]).astype(np.uint8) * 255
 
 HSV_with_threshold = np.concatenate((H_thresh, S_thresh, V_thresh), axis=1)
 # %%
-cv2.imshow(f'BGR channels with threshold {bgr_thresholds}', HSV_with_threshold)
+cv2.imshow(f'HSV channels with threshold {hsv_thresholds}', HSV_with_threshold)
 cv2.waitKey(0)
 
 
