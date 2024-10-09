@@ -79,7 +79,7 @@ def laplace_equation(f: np.ndarray, mask: np.ndarray, param) -> np.ndarray:
             # from image matrix (i, j) coordinates to vectorial(p) coordinate
             p = j * ni_ext + i
 
-            if mask_ext[i, j] == 1: # we have to in-paint this pixel
+            if mask_ext[i, j] > 0 : # we have to in-paint this pixel
                 idx_Ai.extend([p, p         , p         , p    , p])
                 idx_Aj.extend([p, p - ni_ext, p + ni_ext, p - 1, p + 1])
                 a_ij.extend([4, -1, -1, -1, -1])  # Coefficients

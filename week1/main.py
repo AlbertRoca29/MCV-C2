@@ -168,6 +168,64 @@ nc = im.shape[2]
 # Load and show the (binarized) mask
 # B < 0.001 or G < 0.001 (they are equal) are better than R > 0.999 as some parts of the image have high red value
 mask = (B < 0.001).astype('float')
+
+# %%
+cv2.imshow('Binarized mask', mask * 255)
+cv2.waitKey(0)
+# %%
+# Parameters
+param = Parameters(0, 0)
+param.hi = 1 / (ni - 1)
+param.hj = 1 / (nj - 1)
+
+# Perform the in-painting for each channel separately
+u = np.zeros(im.shape, dtype=float)
+u[:, :, 0] = inpainting.laplace_equation(im[:, :, 0], mask, param)
+u[:, :, 1] = inpainting.laplace_equation(im[:, :, 1], mask, param)
+u[:, :, 2] = inpainting.laplace_equation(im[:, :, 2], mask, param)
+# %%
+# Show the final image
+cv2.imshow('In-painted image', u)
+cv2.waitKey(0)
+
+# %%
+### Our example (image8)
+
+image_name = 'image8'
+full_image_path = image_folder + image_name + '_to_restore.tif'
+im = cv2.imread(full_image_path, cv2.IMREAD_UNCHANGED)
+
+# Normalize values into [0,1]
+min_val = np.min(im)
+max_val = np.max(im)
+im = (im.astype('float') - min_val)
+im = im / max_val
+# %%
+# Show normalized image
+cv2.imshow('Normalized Image', im)
+cv2.waitKey(0)
+# %%
+
+# Split the channels
+H, S, V  = cv2.split(cv2.cvtColor((im * 255).astype('uint8'), cv2.COLOR_BGR2HSV))
+
+cv2.waitKey(0)
+
+# Apply thresholds
+H_thresh = (H > 140).astype(np.uint8) * 255
+S_thresh = (S/255 > 0.5).astype(np.uint8) * 255
+V_thresh = (V/255 > 0.4).astype(np.uint8) * 255
+
+# %%
+# Number of pixels for each dimension, and number of channels
+# height, width, number of channels in image
+ni = im.shape[0]
+nj = im.shape[1]
+nc = im.shape[2]
+
+# Load and show the (binarized) mask
+mask = cv2.bitwise_and(cv2.bitwise_and(H_thresh, S_thresh),V_thresh).astype(float)
+
 # %%
 cv2.imshow('Binarized mask', mask * 255)
 cv2.waitKey(0)
