@@ -156,7 +156,8 @@ R_thresh = (R > bgr_thresholds[2]).astype(np.uint8) * 255
 
 BGR_with_threshold = np.concatenate((B_thresh, G_thresh, R_thresh), axis=1)
 # %%
-cv2.imshow(f'BGR channels with threshold {bgr_thresholds}', BGR_with_threshold)
+resized_image = cv2.resize(BGR_with_threshold, (BGR_with_threshold.shape[1] // 2, BGR_with_threshold.shape[0] // 2))
+cv2.imshow(f'BGR channels with threshold {bgr_thresholds}', resized_image)
 cv2.waitKey(0)
 # %%
 # Number of pixels for each dimension, and number of channels
@@ -211,10 +212,18 @@ H, S, V  = cv2.split(cv2.cvtColor((im * 255).astype('uint8'), cv2.COLOR_BGR2HSV)
 
 cv2.waitKey(0)
 
+hsv_thresholds = (145, 0.55, 0.5)
+
 # Apply thresholds
-H_thresh = (H > 140).astype(np.uint8) * 255
-S_thresh = (S/255 > 0.5).astype(np.uint8) * 255
-V_thresh = (V/255 > 0.4).astype(np.uint8) * 255
+H_thresh = (H > hsv_thresholds[0]).astype(np.uint8) * 255
+S_thresh = (S/255 > hsv_thresholds[1]).astype(np.uint8) * 255
+V_thresh = (V/255 > hsv_thresholds[2]).astype(np.uint8) * 255
+
+HSV_with_threshold = np.concatenate((H_thresh, S_thresh, V_thresh), axis=1)
+# %%
+cv2.imshow(f'BGR channels with threshold {bgr_thresholds}', HSV_with_threshold)
+cv2.waitKey(0)
+
 
 # %%
 # Number of pixels for each dimension, and number of channels
