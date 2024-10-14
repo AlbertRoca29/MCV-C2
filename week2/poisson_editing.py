@@ -46,35 +46,12 @@ def get_translation(original_img: np.ndarray, translated_img: np.ndarray, *part:
     # Compute cross-correlation between the original and translated images
     correlation = correlate2d(translated_img[:,:,0], original_img[:,:,0], boundary='symm', mode='same')
     
-    # Find the location of the maximum correlation, which corresponds to the translation
-    max_corr_idx = np.unravel_index(np.argmax(correlation), correlation.shape)
-    
-    # Calculate the shift vector based on the maximum correlation index
-    shift_y = max_corr_idx[0] - original_img.shape[0] // 2
-    shift_x = max_corr_idx[1] - original_img.shape[1] // 2
+    # Find the peak in the correlation matrix
+    shift_y, shift_x = np.unravel_index(np.argmax(correlation), correlation.shape)
+
+    # Center the shift values around the middle of the image
+    shift_y -= correlation.shape[0] // 2
+    shift_x -= correlation.shape[1] // 2
     
     return shift_y, shift_x
 
-# def get_translation(original_img: np.ndarray, translated_img: np.ndarray, *part: str):
-
-    # For the eyes mask:
-    # The top left pixel of the source mask is located at (x=115, y=101)
-    # The top left pixel of the destination mask is located at (x=123, y=125)
-    # This gives a translation vector of (dx=8, dy=24)
-
-    # For the mouth mask:
-    # The top left pixel of the source mask is located at (x=125, y=140)
-    # The top left pixel of the destination mask is located at (x=132, y=173)
-    # This gives a translation vector of (dx=7, dy=33)
-
-    # The following shifts are hard coded:
-    if part[0] == "eyes":
-        return (24, 8)
-    elif part[0] == "mouth":
-        return (33, 7)
-    else:
-        return (0, 0)
-
-    # Here on could determine the shift vector programmatically,
-    # given an original image/mask and its translated version.
-    # Idea: using maximal cross-correlation (e.g., scipy.signal.correlate2d), or similar.
