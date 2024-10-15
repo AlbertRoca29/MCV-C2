@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.signal import correlate2d
+import matplotlib.pyplot as plt
 
 # Forward Gradient
 def im_fwd_gradient(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]: 
@@ -41,15 +42,21 @@ def poisson_linear_operator(u: np.ndarray, beta: np.ndarray) -> np.ndarray:
     return Au
 
 
-def get_translation(original_img: np.ndarray, translated_img: np.ndarray, *part: str) -> tuple[np.ndarray, np.ndarray]:
-    
-    # Compute cross-correlation between the original and translated images
-    correlation = correlate2d(translated_img[:,:,0], original_img[:,:,0], boundary='symm', mode='same')
-    
-    # Find the peak in the correlation matrix
-    shift_y, shift_x = np.unravel_index(np.argmax(correlation), correlation.shape)
+def get_translation(original_img: np.ndarray, translated_img: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
-    # Center the shift values around the middle of the image
+    correlation = correlate2d(translated_img[:, :,0], original_img[:, :,0], boundary='fill', mode='same')
+    
+    # The correlation is having some issues, but is well centered (got it at plotting)
+    # So I am getting the value at center doing the weightened mean
+
+    h, w = correlation.shape
+    x_coords, y_coords = np.meshgrid(np.arange(w), np.arange(h))
+    intensities = correlation.flatten()
+    mean_x = np.sum(x_coords.flatten() * intensities) / np.sum(intensities)
+    mean_y = np.sum(y_coords.flatten() * intensities) / np.sum(intensities)
+
+    shift_y,shift_x = int(mean_y),int(mean_x)
+
     shift_y -= correlation.shape[0] // 2
     shift_x -= correlation.shape[1] // 2
     
