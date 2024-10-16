@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.signal import correlate2d
-import matplotlib.pyplot as plt
+from scipy.sparse.linalg import LinearOperator, cg
 
 # Forward Gradient
 def im_fwd_gradient(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]: 
@@ -37,14 +37,19 @@ def poisson_linear_operator(u: np.ndarray, beta: np.ndarray) -> np.ndarray:
     Implements the action of the matrix A in the quadratic energy associated
     to the Poisson editing problem.
     """
-    laplace_u = im_bwd_divergence(*im_fwd_gradient(u))
-    Au = laplace_u * beta
+    
+    grad_u_i, grad_u_j = im_fwd_gradient(u)
+    
+    div_u = im_bwd_divergence(grad_u_i, grad_u_j)
+    
+    Au = np.where(beta > 0, u, 0) - div_u
+    
     return Au
 
 
 def get_translation(original_img: np.ndarray, translated_img: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
-    correlation = correlate2d(translated_img[:, :,0], original_img[:, :,0], boundary='fill', mode='same')
+    correlation = correlate2d(translated_img, original_img, boundary='fill', mode='same')
     
     # The correlation is having some issues, but is well centered (got it at plotting)
     # So I am getting the value at center doing the weightened mean
@@ -55,10 +60,36 @@ def get_translation(original_img: np.ndarray, translated_img: np.ndarray) -> tup
     mean_x = np.sum(x_coords.flatten() * intensities) / np.sum(intensities)
     mean_y = np.sum(y_coords.flatten() * intensities) / np.sum(intensities)
 
-    shift_y,shift_x = int(mean_y),int(mean_x)
+    shift_y,shift_x = round(mean_y),round(mean_x)
 
     shift_y -= correlation.shape[0] // 2
     shift_x -= correlation.shape[1] // 2
     
     return shift_y, shift_x
 
+def solve_poisson(b: np.ndarray, beta: np.ndarray, u_init: np.ndarray, tol=1e-5, maxiter=1000):
+    """
+    Solves the linear system Au = b using the Conjugate Gradient method.
+    
+    Parameters:
+    - b: Right-hand side vector (numpy array).
+    - beta: Binary mask or constraint matrix (numpy array).
+    - u_init: Initial guess for the solution (numpy array).
+    - tol: Tolerance for the solver convergence.
+    - maxiter: Maximum number of iterations.
+    
+    Returns:
+    - u: Solution vector (numpy array).
+    """
+    def A_operator(u):
+        h, w = beta.shape
+        return poisson_linear_operator(u.reshape((h,w)), beta)
+
+    A_linear_operator = LinearOperator(matvec=A_operator, dtype=b.dtype, shape=(b.size, b.size))
+    
+    u, info = cg(A_linear_operator, b, x0=u_init, rtol=tol, maxiter=maxiter)
+    
+    if info != 0:
+        print(f"Conjugate Gradient did not converge. Info: {info}")
+    
+    return u
